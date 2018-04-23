@@ -157,6 +157,76 @@ def rescale_numeric(df):
     df = scaleColumns(df,cols)
 
     return df
+def combine_with_lehman_data(df):
+    players = pd.read_csv('baseballdatabank-master/core/People.csv')
+    #players = players.set_index('playerID')
+
+    drop_cols = ['deathYear','deathMonth','deathDay','deathCountry','deathState','deathCity',
+                'birthYear','birthMonth','birthDay','birthCountry','birthState','birthCity',
+                'nameGiven','weight','height','bats','throws','finalGame','retroID','bbrefID']
+    players = players.drop(drop_cols,axis=1)
+    players['fullname'] = players['nameFirst'] + ' ' + players['nameLast']
+    players = players.dropna()
+
+    players['fullname'] = players['fullname'].apply(lambda x: ''.join(re.sub(r'[^\w\s]','',x).split(' ')).lower())
+    
+    batting = pd.read_csv('baseballdatabank-master/core/Batting.csv')
+    bats = batting[batting['yearID'] >= 2000]
+    
+    bat_join = bats.merge(players,how='left',on='playerID')
+
+    keep_cols = ['yearID',
+     'G',
+     'AB',
+     'R',
+     'H',
+     '2B',
+     '3B',
+     'HR',
+     'RBI',
+     'SB',
+     'CS',
+     'BB',
+     'SO',
+     'IBB',
+     'HBP',
+     'SH',
+     'SF',
+     'GIDP',
+     'debut',
+     'fullname']
+
+    bat_join = bat_join[keep_cols]
+
+    bat_join.columns = [x.lower() for x in bat_join.columns]
+
+    bat_join = bat_join.groupby(['fullname','yearid','debut'],axis=0)['g','ab','r','h','2b','3b','hr','rbi','sb','cs','bb','so','ibb','hbp','sh','sf','gidp'].sum().reset_index()
+    bat_join['str_g'] = bat_join['g'].apply(str)
+    bat_join['str_year'] = bat_join['yearid'].apply(str)
+    bat_join['name_g_y'] = bat_join['fullname'] + ' ' + bat_join['str_g'] + ' ' + bat_join['str_year']
+    
+    df['str_g'] = df['g'].apply(str)
+    df['str_year'] = df['year'].apply(str)
+    df['name'] = df['name'].apply(fix_aoki_and_castell)
+    df['name_g_y'] = df['name'].apply(lambda x: ''.join(x.split(' ')).lower()) + ' ' + df['str_g'] + ' ' + df['str_year']
+    
+    df = df.merge(bat_join,how='left',on='name_g_y')
+    
+    df = df.dropna()
+
+    df['debut_year'] = df['debut'].apply(lambda x: int(x.split('-')[0]))
+
+    df['years_in_mlb'] = df['year'] - df['debut_year']
+
+    df = df.drop(['g_y','str_g_x','str_g_y','str_year_x','str_year_y','debut','debut_year','yearid','name_g_y','fullname'],axis=1)
+    return df
+
+def fix_aoki_and_castell(name):
+    if name == 'Norichika Aoki':
+        return 'Nori Aoki'
+    elif name == 'Nicholas Castellanos':
+        return 'Nick Castellanos'
+    else: return name
 
 
 def load_and_split_data(cutoff = 1):
@@ -166,6 +236,10 @@ def load_and_split_data(cutoff = 1):
     #Scale inflation and engineer categorical features
     train = engineer_features(train)
     test = engineer_features(test)
+
+    #Combine calculated statistics scraped from baseball-reference with raw stats from Lehman database
+    train = combine_with_lehman_data(train)
+    test = combine_with_lehman_data(test)
     
     #Rescale numeric features to be (0,1)
     train = rescale_numeric(train)
