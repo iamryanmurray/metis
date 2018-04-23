@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error as MSE
 from sklearn import preprocessing
 import math
+import re
 
 import warnings
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
@@ -64,6 +65,10 @@ def fixtm(t):
         return 'MIA'
     else: return t
 
+def fix_name(n):
+    n1 = (' ').join(n.split('\xa0'))
+    n2 = re.sub(r'[^\w\s]','',n1)
+    return n2
 
 def train_and_test(cutoff = 1000000):
     train_X,train_y,test_X,test_y = load_and_split_data(cutoff)
@@ -104,6 +109,8 @@ def engineer_features(df):
     df = df[df.pa>200]
 
     df = df.reset_index()
+
+    df['name'] = df['name'].apply(fix_name)
     #adjust team names
     df['tm'] = df['tm'].apply(fixtm)
     #drop position summary (too many classes), log_sal (unscaled by inflation), rk (same as index)
