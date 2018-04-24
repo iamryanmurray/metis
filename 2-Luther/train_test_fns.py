@@ -84,6 +84,20 @@ def train_and_test(cutoff = 1000000):
     
     return round(10**error,2)
 
+def train_and_test(cutoff = 1000000):
+    train_X,train_y,test_X,test_y = load_and_split_data(cutoff)
+
+    
+    lr = LinearRegression()
+
+    lr.fit(train_X, train_y)
+
+    preds = lr.predict(test_X)
+
+    error = np.sqrt(MSE(test_y,preds))
+    
+    return round(10**error,2)
+
 
 def cutoff_df(df,cutoff):
     log_10_cut = math.log10(cutoff)
@@ -98,11 +112,40 @@ def test_cutoffs():
         error_list.append(error)
     return test_cutoffs,error_list
 
+def test_elastic_cutoffs():
+    test_cutoffs = [(i+1)*100000 for i in range(20)]
+    error_list = []
+    for i in test_cutoffs:
+        error = elastic(i)
+        error_list.append(error)
+    return test_cutoffs,error_list    
 
 
 def load_data():
     train = pd.read_pickle('batting_00_16.pkl')
     test = pd.read_pickle('batting_17.pkl')
+    return pd.concat([train,test])
+
+def ordered(row):
+    if row['name'] == row['np']:
+        return row['next_sal']
+    else:
+        return np.nan
+
+def get_salary_for_next_year():
+    df = load_data()
+    df = engineer_features(df)
+    df = df.sort_values(by = ['name','year'])
+    df['next_sal'] = df['log10_adj'].shift(-1)
+    df['np'] = df['name'].shift(-1)
+    df['next_sal'] = df.apply(ordered,axis=1)
+    df = df.dropna()
+    df['log10_adj'] = df['next_sal']
+    df = df.drop(['next_sal','np'],axis=1)
+    
+    train = df[df['year']<2016]
+    test = df[df['year']==2016]
+    
     return train,test
 
 def engineer_features(df):
@@ -135,12 +178,8 @@ def scaleColumns(df, cols_to_scale):
     return df    
 
 def rescale_numeric(df):
-    
-    cols = [ 'g',
-         'pa',
-         'rbat',
-         'rbaser',
-         'rdp',
+    df = df.reset_index().drop(['index'],axis=1)
+    cols = ['g','pa','rbat','rbaser','rdp',
          'rfield',
          'rpos',
          'raa',
@@ -153,10 +192,13 @@ def rescale_numeric(df):
          'owar',
          'dwar',
          'orar',
-         'year',]
+         'year',
+         'ab', 'r', 'h', '2b', '3b', 'hr', 'rbi', 'sb', 'cs', 'bb', 'so', 'ibb',
+         'hbp', 'sh', 'sf', 'gidp', 'years_in_mlb']
     df = scaleColumns(df,cols)
 
     return df
+
 def combine_with_lehman_data(df):
     players = pd.read_csv('baseballdatabank-master/core/People.csv')
     #players = players.set_index('playerID')
@@ -217,8 +259,8 @@ def combine_with_lehman_data(df):
     df['debut_year'] = df['debut'].apply(lambda x: int(x.split('-')[0]))
 
     df['years_in_mlb'] = df['year'] - df['debut_year']
-
-    df = df.drop(['g_y','str_g_x','str_g_y','str_year_x','str_year_y','debut','debut_year','yearid','name_g_y','fullname'],axis=1)
+    df['g'] = df['g_x']
+    df = df.drop(['g_x','g_y','str_g_x','str_g_y','str_year_x','str_year_y','debut','debut_year','yearid','name_g_y','fullname'],axis=1)
     return df
 
 def fix_aoki_and_castell(name):
@@ -231,16 +273,17 @@ def fix_aoki_and_castell(name):
 
 def load_and_split_data(cutoff = 1):
     #Load dataframes from pickle
-    train,test = load_data()
+
+
+    train,test = get_salary_for_next_year()
     
     #Scale inflation and engineer categorical features
-    train = engineer_features(train)
-    test = engineer_features(test)
 
     #Combine calculated statistics scraped from baseball-reference with raw stats from Lehman database
     train = combine_with_lehman_data(train)
     test = combine_with_lehman_data(test)
     
+
     #Rescale numeric features to be (0,1)
     train = rescale_numeric(train)
     test = rescale_numeric(test)
@@ -252,7 +295,19 @@ def load_and_split_data(cutoff = 1):
     #Split into features and response matrices
     train_y = train['log10_adj']
     test_y = test['log10_adj']
-    train_X = train.drop(['name','age','log10_adj'],axis=1)
-    test_X = test.drop(['name','age','log10_adj'],axis=1)
+    train_X = train.drop(['name','age','log10_adj','salary','adj_salary'],axis=1)
+    test_X = test.drop(['name','age','log10_adj','salary','adj_salary'],axis=1)
     
     return train_X, train_y, test_X, test_y
+
+
+def plot_with_cutoff(cut,err):
+    fig,ax = plt.subplots(figsize=(4,4))
+
+    ax.scatter([i/1000 for i in cut],err)
+    ax.set_title("Error Factor vs Cutoff Salary")
+    ax.set_ylabel("Error Factor")
+    ax.set_xlabel("Minimum Salary (Thousands)")
+    ax.set_yticks([1,1.5,2,2.5,3]);
+    ax.set_xticks([0,500,1000,1500,2000]);
+    plt.tight_layout()
