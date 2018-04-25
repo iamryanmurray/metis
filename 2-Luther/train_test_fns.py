@@ -311,3 +311,15 @@ def plot_with_cutoff(cut,err):
     ax.set_yticks([1,1.5,2,2.5,3]);
     ax.set_xticks([0,500,1000,1500,2000]);
     plt.tight_layout()
+
+def plot_with_cutoff_and_cols(cut,err,cols):
+    fig,ax = plt.subplots(figsize=(4,4))
+
+    ax.scatter([i/1000 for i in cut],err)
+    ax.scatter([i/1000 for i in cut],[i/10 for i in cols])
+    ax.set_title("Error Factor vs Cutoff Salary")
+    ax.set_ylabel("Error Factor")
+    ax.set_xlabel("Minimum Salary (Thousands)")
+    ax.set_yticks([1,1.5,2,2.5,3]);
+    ax.set_xticks([0,500,1000,1500,2000]);
+    plt.tight_layout()
