@@ -152,6 +152,8 @@ def engineer_features(df):
     df = df[df.pa>200]
 
     df = df.reset_index()
+    df['pa/g'] = df['pa']/df['g']
+
 
     df['name'] = df['name'].apply(fix_name)
     #adjust team names
@@ -168,6 +170,14 @@ def engineer_features(df):
     #get dummy variables for team, hand, and acquired columns
     df = pd.get_dummies(df,columns = ['acquired','bat_hand','tm']).drop(['tm_multiple','bat_hand_rhb','acquired_tr'],axis=1)
     #filter datasets for only batters with more than 200 plate appearances in season
+
+    return df
+
+def new_features(df):
+    df['ba'] = df['h']/df['ab']
+    df['obp'] = (df['h']+df['bb']+df['hbp'])/(df['ab']+df['bb']+df['hbp']+df['sh'])
+    df['slg'] = (df['h']+df['2b']+2*df['3b']+3*df['hr'])/df['ab']
+
 
     return df
 
@@ -194,7 +204,7 @@ def rescale_numeric(df):
          'orar',
          'year',
          'ab', 'r', 'h', '2b', '3b', 'hr', 'rbi', 'sb', 'cs', 'bb', 'so', 'ibb',
-         'hbp', 'sh', 'sf', 'gidp', 'years_in_mlb']
+         'hbp', 'sh', 'sf', 'gidp', 'years_in_mlb','pa/g','ba','obp','slg']
     df = scaleColumns(df,cols)
 
     return df
@@ -277,12 +287,11 @@ def load_and_split_data(cutoff = 1):
 
     train,test = get_salary_for_next_year()
     
-    #Scale inflation and engineer categorical features
-
     #Combine calculated statistics scraped from baseball-reference with raw stats from Lehman database
     train = combine_with_lehman_data(train)
     test = combine_with_lehman_data(test)
     
+    train,test = new_features(train),new_features(test)
 
     #Rescale numeric features to be (0,1)
     train = rescale_numeric(train)
