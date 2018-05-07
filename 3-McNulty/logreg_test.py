@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 from sklearn.linear_model import LogisticRegression
 
+from data_clean_script import *
+
 X_train_scaled,X_test_scaled,y_train,y_test = rescale_train_test(X,y)
 
 lr = LogisticRegression()
