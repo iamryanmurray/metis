@@ -10,21 +10,29 @@ import nltk
 from nltk.corpus import stopwords
 from textblob import TextBlob
 from textblob import Word
+from urllib.parse import urlsplit
+
 
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.model_selection import train_test_split
 
 
 nltk.download('stopwords')
 nltk.download('wordnet')
 
 def is_downvoted(score):
-	if score < 0:
-		return 1
-	else: return 0
+    if score < 0:
+        return 1
+    else: return 0
 
 def avg_word(sentence):
     words = sentence.split()
-    return (sum(len(word) for word in words if len(word)<20)/len(words))
+    if len(words) > 0:
+        return sum(len(word) for word in words if len(word)<20)/len(words)
+    else:
+        return 0
+
 
 def extract_md_link(post):
     doc = etree.fromstring(markdown.markdown(post))
@@ -42,7 +50,7 @@ def get_link(post):
     url_list = []
     for item in myString_list:
         try:
-            a = re.search("(?P<url>https?://[^\s]+)", item) or re.search("(?P<url>www[^\s]+)", url)
+            a = re.search("(?P<url>https?://[^\s]+)", item) or re.search("(?P<url>www[^\s]+)", item)
             a = a.group('url')
             b = '.'.join(urlsplit(a).hostname.split('.')[-2:])
             
@@ -75,139 +83,157 @@ def remove_deleted(author):
 
 
 
-def clean_df(df):
-	#reset index and remove irrelavent columns
+def clean_df(df,filename='cleaned_data'):
+    #reset index and remove irrelavent columns
 
-	df = df.reset_index()
+    df = df.reset_index()
 
-	drop_cols = [
-	'index',
-	'score_hidden',
-	'name','downs',
-	'subreddit_id',
-	'subreddit',
-	'controversiality',
-	'gilded',
-	'ups',
-	'distinguished',
-	'removal_reason'
-	]
+    drop_cols = [
+    'index',
+    'score_hidden',
+    'name','downs',
+    'subreddit_id',
+    'subreddit',
+    'controversiality',
+    'gilded',
+    'ups',
+    'distinguished',
+    'removal_reason',
+    'archived',
+    'author_flair_css_class'
+    ]
 
-	df = df.drop(drop_cols,axis=1)
+    df = df.drop(drop_cols,axis=1)
 
-	#convert score into a binary 'downvoted' column (target)
-	df['downvoted'] = df['score'].apply(lambda x: is_downvoted(x))
+    #remove nulls in body and retrieved_on columns (about 600 rows removed)
+    df = df.dropna(subset=['body','retrieved_on'],axis=0)
+    df = df.reset_index()
+    df = df.drop('index',axis=1)
 
-	#remove newline ('\n') characters from text
-	df['body'] = df['body'].apply(lambda x: drop_newlines(x))
+    #convert score into a binary 'downvoted' column (target)
+    df['downvoted'] = df['score'].apply(lambda x: is_downvoted(x))
 
-	#convert timestamps to pandas datetime object and calculate age of post 
-	#when it was added to the database
-	df['created_utc'] = pd.to_datetime(df['created_utc'],unit='s')
-	df['retreived_on'] = pd.to_datetime(df['retreived_on'],unit='s')
-	df['age_retrieved'] = df['retreived_on'] - df['created_utc']
+    #remove newline ('\n') characters from text
+    df['body'] = df['body'].apply(lambda x: drop_newlines(x))
 
-	#remove '[deleted]' authors, create binary 'author_deleted column'
-	df['author_deleted'] = df['author'].apply(filter_deleted)
-	df['author_fix'] = df['author'].apply(remove_deleted)
+    #convert timestamps to pandas datetime object and calculate age of post 
+    #when it was added to the database
+    df['created_utc'] = pd.to_datetime(df['created_utc'],unit='s')
+    df['retrieved_on '] = pd.to_datetime(df['retrieved_on'],unit='s')
+    df['age_retrieved'] = df['retrieved_on '] - df['created_utc']
 
-	#create a column that counts how many times the author has posted in the 
-	#subreddit
-	df['author_counts']	= df.groupby(['author_fix'])['body'].transform('count').fillna(0)
+    #remove '[deleted]' authors, create binary 'author_deleted column'
+    df['author_deleted'] = df['author'].apply(filter_deleted)
+    df['author_fix'] = df['author'].apply(remove_deleted)
 
-	#create a binary column that states if the author has a flair
-	#possible to do analysis on specific flairs later
-	df['has_flair'] = df['author_flair_text'].apply(has_flair)
+    #create a column that counts how many times the author has posted in the 
+    #subreddit
+    df['author_counts'] = df.groupby(['author_fix'])['body'].transform('count').fillna(0)
 
-	#get wordcount of each post
-	df['word_count'] = df['body'].apply(lambda x: len(str(x).split(' ')))
+    #create a binary column that states if the author has a flair
+    #possible to do analysis on specific flairs later
+    df['has_flair'] = df['author_flair_text'].apply(has_flair)
 
-	#get average word length (words shorter than 20 chars to exclude links)
-	df['avg_word'] = df['body'].apply(lambda x: avg_word(x))
+    #get wordcount of each post
+    df['word_count'] = df['body'].apply(lambda x: len(str(x).split(' ')))
 
-	#extract urls from posts and return the domains in the post
-	df['links'] = df['body'].apply(lambda x: get_link(x))
+    #get average word length (words shorter than 20 chars to exclude links)
+    df['avg_word'] = df['body'].apply(lambda x: avg_word(x))
 
-	#load in list of stopwords and get a count of stopwords in each post
-	stop = stopwords.words('english')
-	df['stopwords'] = df['body'].apply(lambda x: len([x for x in x.split() if x in stop]))
+    #extract urls from posts and return the domains in the post
+    df['links'] = df['body'].apply(lambda x: get_link(x))
 
-	#get digits in post
-	df['numerics'] = df['body'].apply(lambda x: len([x for x in x.split() if x.isdigit()]))
+    #load in list of stopwords and get a count of stopwords in each post
+    stop = stopwords.words('english')
+    df['stopwords'] = df['body'].apply(lambda x: len([x for x in x.split() if x in stop]))
 
-	#get count of words in ALL CAPS (not including one letter words)
-	df['upper'] = df['body'].apply(lambda x: len([x for x in x.split() if x.isupper() and len(x)>1]))
+    #get digits in post
+    df['numerics'] = df['body'].apply(lambda x: len([x for x in x.split() if x.isdigit()]))
 
-	#clean text: convert to lowercase, remove links, remove stopwords
-	df['body_clean'] = df['body'].apply(lambda x: " ".join(x.lower() for x in x.split()))
-	df['body_clean'] = df['body_clean'].apply(replace_md_links)
-	df['body_clean'] = df['body_clean'].str.replace('[^\w\s]','')
-	df['body_clean'] = df['body_clean'].apply(lambda x: " ".join(x for x in x.split() if x not in stop))
+    #get count of words in ALL CAPS (not including one letter words)
+    df['upper'] = df['body'].apply(lambda x: len([x for x in x.split() if x.isupper() and len(x)>1]))
 
-	#lemmatize the words (remove endings like ly, ing, etc)
-	df['body_clean']=df['body_clean'].apply(lambda x: " ".join([Word(word).lemmatize() for word in x.split()]))
+    #clean text: convert to lowercase, remove links, remove stopwords
+    df['body_clean'] = df['body'].apply(lambda x: " ".join(x.lower() for x in x.split()))
+    df['body_clean'] = df['body_clean'].apply(replace_md_links)
+    df['body_clean'] = df['body_clean'].str.replace('[^\w\s]','')
+    df['body_clean'] = df['body_clean'].apply(lambda x: " ".join(x for x in x.split() if x not in stop))
 
-	#remove most common words and any word that only occurs once in the post
-	#may need to increase number of words removed once the dataset gets bigger
-	freq = pd.Series(' '.join(df['body_clean']).split()).value_counts()[:20]
-	freq = list(freq.index)
-	df['body_clean'] = df['body_clean'].apply(lambda x: " ".join(x for x in x.split() if x not in freq))
+    #lemmatize the words (remove endings like ly, ing, etc)
+    df['body_clean']=df['body_clean'].apply(lambda x: " ".join([Word(word).lemmatize() for word in x.split()]))
 
-	lowfreq = pd.Series(' '.join(df['body_clean']).split()).value_counts()
-	only_one = lowfreq[lowfreq == 1]
-	df['body_clean']=df['body_clean'].apply(lambda x: " ".join(x for x in x.split() if x not in only_one))
+    #remove most common words and any word that only occurs once in the post
+    #may need to increase number of words removed once the dataset gets bigger
+    freq = pd.Series(' '.join(df['body_clean']).split()).value_counts()[:20]
+    freq = list(freq.index)
+    df['body_clean'] = df['body_clean'].apply(lambda x: " ".join(x for x in x.split() if x not in freq))
 
-	#I would like to use the TextBlob correct() method to spell correct the text, but it 
-	#seems like it will take way too long
+    lowfreq = pd.Series(' '.join(df['body_clean']).split()).value_counts()
+    only_one = lowfreq[lowfreq == 1]
+    df['body_clean']=df['body_clean'].apply(lambda x: " ".join(x for x in x.split() if x not in only_one))
 
-	#do sentiment analysis on the cleaned text
-	df['sentiment'] = df['body_clean'].apply(lambda x: TextBlob(x).sentiment[0])
+    #I would like to use the TextBlob correct() method to spell correct the text, but it 
+    #seems like it will take way too long
 
-	return df
+    #do sentiment analysis on the cleaned text
+    df['sentiment'] = df['body_clean'].apply(lambda x: TextBlob(x).sentiment[0])
+
+    df.to_pickle('./data/{0}.pkl'.format(filename))
 
 
 def get_bag_of_words_text(df):
-	#Convert lemmatized text to "bag of words with top 3000 features"
-	bow = CountVectorizer(max_features=3000, lowercase=True, ngram_range=(1,3),analyzer = "word")
-	text_bow = bow.fit_transform(df['body_clean'])
-	text_bow_df = pd.DataFrame(train_bow.toarray())
+    #Convert lemmatized text to "bag of words with top 3000 features"
+    bow = CountVectorizer(max_features=3000, lowercase=True, ngram_range=(1,3),analyzer = "word")
+    text_bow = bow.fit_transform(df['body_clean'])
+    text_bow_df = pd.DataFrame(text_bow.toarray())
 
-	return text_bow_df
+    return text_bow_df
 
 
 def get_bag_of_words_url(df):
-	#convert urls to bag of words with 100 features
-	bow = CountVectorizer(max_features=100, lowercase=True, ngram_range=(1,1),analyzer = "word")
-	link_bow = bow.fit_transform(comments['links'])
-	link_bow_df = pd.DataFrame(link_bow.toarray())
+    #convert urls to bag of words with 100 features
+    bow = CountVectorizer(max_features=100, lowercase=True, ngram_range=(1,1),analyzer = "word")
+    link_bow = bow.fit_transform(df['links'])
+    link_bow_df = pd.DataFrame(link_bow.toarray())
 
-	return link_bow_df
+    return link_bow_df
 
 def get_x_y_dfs(df):
 
-	y = df['downvoted']
-	text = get_bag_of_words_text(df)
-	urls = get_bag_of_words_url(df)
-	good_cols = df[[
-	'word_count',
-	'avg_word',
-	'stopwords',
-	'numerics',
-	'upper',
-	'sentiment',
-	'has_flair',
-	'author_counts'
-	]]
+    y = df['downvoted']
+    text = get_bag_of_words_text(df)
+    urls = get_bag_of_words_url(df)
+    good_cols = df[[
+    'word_count',
+    'avg_word',
+    'stopwords',
+    'numerics',
+    'upper',
+    'sentiment',
+    'has_flair',
+    'author_counts'
+    ]]
 
-	full_X = good_cols.merge(text, how='outer', left_index=True, right_index=True).merge(urls,how='outer', left_index=True, right_index=True)
+    full_X = good_cols.merge(text, how='outer', left_index=True, right_index=True).merge(urls,how='outer', left_index=True, right_index=True)
 
-	return full_X, y
+    return full_X, y
 
-def clean_and_split(df):
-	cleaned = clean_df(df)
-	X,y = get_x_y_dfs(df)
+def split_with_bow():
+    cleaned = pd.read_pickle('./data/cleaned_data.pkl')
+    X,y = get_x_y_dfs(cleaned)
 
-	return X,y
+    return X,y
+
+def rescale_train_test(X,y):
+    X_train,X_test,y_train,y_test = train_test_split(X,y,test_size = 0.2,random_state = 42,stratify=y)
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    return X_train_scaled,X_test_scaled,y_train,y_test
+
+
+
 
 
 
