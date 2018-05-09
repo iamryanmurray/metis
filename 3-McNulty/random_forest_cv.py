@@ -33,7 +33,7 @@ random_grid = {'n_estimators': n_estimators,
                'bootstrap': bootstrap}
 
 
-rf = RandomForestClassifier()
+rf = RandomForestClassifier(n_jobs=-1)
 rf_random = RandomizedSearchCV(estimator = rf, 
                                param_distributions = random_grid, 
                                n_iter = 10, cv = 3, verbose=2, 
