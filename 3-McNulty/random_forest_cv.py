@@ -2,6 +2,7 @@ from data_clean_script import *
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
+import matplotlib.pyplot as plt
 
 X,y = split_with_bow()
 X_train, X_test, y_train, y_test = rescale_train_test(X,y)
@@ -33,9 +34,26 @@ random_grid = {'n_estimators': n_estimators,
 rf = RandomForestClassifier()
 rf_random = RandomizedSearchCV(estimator = rf, 
                                param_distributions = random_grid, 
-                               n_iter = 10, cv = 3, verbose=2, 
-                               random_state=42, n_jobs = -1,scoring='roc_auc')
+                               n_iter = 100, cv = 3, verbose=2, 
+                               random_state=10, n_jobs = -1,scoring='roc_auc')
+
+
+print(rf_random.best_params_)
 
 rf_random.fit(X_train,y_train)
 
-print(rf_random.best_params_)
+
+best_prob = rf_random.predict_proba(X_test)[:,1]
+
+fpr, tpr,thresh = roc_curve(y_test, best_prob)
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+plt.title('Random Forest')
+plt.plot([0,1],[0,1])
+plt.plot(fpr,tpr)
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.draw()
+plt.savefig('random_forest_2.eps')
+
