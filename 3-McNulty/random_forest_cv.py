@@ -3,6 +3,8 @@ from sklearn.metrics import roc_curve, auc, roc_auc_score
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
+import pickle
+
 
 X,y = split_with_bow()
 X_train, X_test, y_train, y_test = rescale_train_test(X,y)
@@ -43,6 +45,15 @@ rf_random.fit(X_train,y_train)
 
 print(rf_random.best_params_)
 
+try:
+	pickle.dump(rf_random,'random_forest_randomized_search_cv.pkl')
+except:
+	pass
+
+try:
+	pickle.dump(rf_random.best_params,'random_forest_randomized_search_cv_params.pkl')
+except:
+	pass
 
 best_prob = rf_random.predict_proba(X_test)[:,1]
 
