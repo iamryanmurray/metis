@@ -34,7 +34,7 @@ random_grid = {'n_estimators': n_estimators,
 rf = RandomForestClassifier()
 rf_random = RandomizedSearchCV(estimator = rf, 
                                param_distributions = random_grid, 
-                               n_iter = 100, cv = 3, verbose=2, 
+                               n_iter = 10, cv = 3, verbose=2, 
                                random_state=10, n_jobs = -1,scoring='roc_auc')
 
 
