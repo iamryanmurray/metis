@@ -38,9 +38,10 @@ rf_random = RandomizedSearchCV(estimator = rf,
                                random_state=10, n_jobs = -1,scoring='roc_auc')
 
 
-print(rf_random.best_params_)
 
 rf_random.fit(X_train,y_train)
+
+print(rf_random.best_params_)
 
 
 best_prob = rf_random.predict_proba(X_test)[:,1]
