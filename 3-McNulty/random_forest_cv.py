@@ -11,7 +11,7 @@ X_train, X_test, y_train, y_test = rescale_train_test(X,y)
 
 
 # Number of trees in random forest
-n_estimators = [int(x) for x in np.linspace(start = 100, stop = 100, num = 10)]
+n_estimators = [int(x) for x in np.linspace(start = 100, stop = 1000, num = 10)]
 # Number of features to consider at every split
 max_features = ['sqrt','auto']
 # Maximum number of levels in tree
