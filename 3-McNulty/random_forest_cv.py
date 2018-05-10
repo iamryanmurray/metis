@@ -11,16 +11,16 @@ X_train, X_test, y_train, y_test = rescale_train_test(X,y)
 
 
 # Number of trees in random forest
-n_estimators = [int(x) for x in np.linspace(start = 100, stop = 1000, num = 10)]
+n_estimators = [200,400]
 # Number of features to consider at every split
 max_features = ['sqrt','auto']
 # Maximum number of levels in tree
 max_depth = [int(x) for x in np.linspace(5, 50, num = 10)]
 max_depth.append(None)
 # Minimum number of samples required to split a node
-min_samples_split = [5, 10,20]
+min_samples_split = [2,4,8,16]
 # Minimum number of samples required at each leaf node
-min_samples_leaf = [2, 4,10]
+min_samples_leaf = [2, 4,8,16]
 # Method of selecting samples for training each tree
 bootstrap = [True]
 
@@ -36,7 +36,7 @@ random_grid = {'n_estimators': n_estimators,
 rf = RandomForestClassifier(n_jobs=-1)
 rf_random = RandomizedSearchCV(estimator = rf, 
                                param_distributions = random_grid, 
-                               n_iter = 20, cv = 3, verbose=2, 
+                               n_iter = 20, cv = 3, verbose=10, 
                                n_jobs = -1,scoring='roc_auc')
 
 
