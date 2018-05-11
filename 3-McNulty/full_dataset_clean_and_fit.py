@@ -226,10 +226,10 @@ def split_with_bow():
 
 def rescale_dataset(X,y):
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
+    X_scaled = scaler.fit_transform(X)
     #X_test_scaled = scaler.transform(X_test)
 
-    return X_train_scaled,y_train
+    return X_scaled,y_train
 
 X,y = split_with_bow()
 
