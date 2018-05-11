@@ -17,6 +17,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.model_selection import train_test_split
 
+import pickle
+
 
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -183,8 +185,11 @@ def clean_df(df,filename='cleaned_data'):
 
 def get_bag_of_words_text(df):
     #Convert lemmatized text to "bag of words with top 3000 features"
-    bow = CountVectorizer(max_features=3000, lowercase=True, ngram_range=(1,3),analyzer = "word")
-    text_bow = bow.fit_transform(df['body_clean'])
+    bow_text = CountVectorizer(max_features=3000, lowercase=True, ngram_range=(1,3),analyzer = "word")
+
+    text_bow = bow_text.fit_transform(df['body_clean'])
+    with open('text_bow_object.pkl', 'wb') as handle:
+        pickle.dump(bow_text, handle, protocol=pickle.HIGHEST_PROTOCOL)
     text_bow_df = pd.DataFrame(text_bow.toarray())
 
     return text_bow_df
@@ -192,8 +197,11 @@ def get_bag_of_words_text(df):
 
 def get_bag_of_words_url(df):
     #convert urls to bag of words with 100 features
-    bow = CountVectorizer(max_features=100, lowercase=True, ngram_range=(1,1),analyzer = "word")
-    link_bow = bow.fit_transform(df['links'])
+    bow_link = CountVectorizer(max_features=100, lowercase=True, ngram_range=(1,1),analyzer = "word")
+
+    link_bow = bow_link.fit_transform(df['links'])
+    with open('link_bow_object.pkl', 'wb') as handle:
+        pickle.dump(bow_link, handle, protocol=pickle.HIGHEST_PROTOCOL)
     link_bow_df = pd.DataFrame(link_bow.toarray())
 
     return link_bow_df
@@ -227,15 +235,22 @@ def split_with_bow():
 def rescale_dataset(X,y):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
+
+    with open('scaler_object.pkl', 'wb') as handle:
+        pickle.dump(scaler, handle, protocol=pickle.HIGHEST_PROTOCOL)
     #X_test_scaled = scaler.transform(X_test)
 
     return X_scaled,y
 
 X,y = split_with_bow()
 
+with open('full_training_df.pkl', 'wb') as handle:
+    pickle.dump(X, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 Xs,y = rescale_dataset(X,y)
 
-from sklearn.ensemble import RandomForestClassifier
+'''from sklearn.ensemble import RandomForestClassifier
 
 rf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', max_depth=50, 
     max_features='sqrt', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, 
@@ -250,5 +265,5 @@ with open('random_forest_model_full.pkl', 'wb') as handle:
     pickle.dump(rf, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-
+'''
 
