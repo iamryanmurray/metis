@@ -244,6 +244,8 @@ rf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
 
 rf.fit(Xs,y)
 
+import pickle
+
 with open('random_forest_model_full.pkl', 'wb') as handle:
     pickle.dump(rf, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
