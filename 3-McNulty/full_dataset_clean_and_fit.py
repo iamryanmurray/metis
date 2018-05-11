@@ -235,6 +235,7 @@ X,y = split_with_bow()
 
 Xs,y = rescale_dataset(X,y)
 
+from sklearn.tree import RandomForestClassifier
 
 rf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', max_depth=50, 
     max_features='sqrt', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, 
