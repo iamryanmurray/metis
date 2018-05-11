@@ -231,9 +231,9 @@ def rescale_dataset(X,y):
 
     return X_train_scaled,y_train
 
+X,y = split_with_bow()
 
-
-X,y = rescale_dataset(split_with_bow())
+Xs,y = rescale_dataset(X,y)
 
 
 rf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini', max_depth=50, 
@@ -241,7 +241,7 @@ rf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
     min_samples_leaf=2, min_samples_split=10, min_weight_fraction_leaf=0.0, 
     n_estimators=200, n_jobs=-1, oob_score=False, random_state=None, verbose=0, warm_start=False)
 
-rf.fit(X,y)
+rf.fit(Xs,y)
 
 with open('random_forest_model_full.pkl', 'wb') as handle:
     pickle.dump(rf, handle, protocol=pickle.HIGHEST_PROTOCOL)
