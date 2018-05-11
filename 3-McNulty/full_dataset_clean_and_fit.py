@@ -229,7 +229,7 @@ def rescale_dataset(X,y):
     X_scaled = scaler.fit_transform(X)
     #X_test_scaled = scaler.transform(X_test)
 
-    return X_scaled,y_train
+    return X_scaled,y
 
 X,y = split_with_bow()
 
