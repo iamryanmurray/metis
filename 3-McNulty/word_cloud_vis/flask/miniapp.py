@@ -18,6 +18,9 @@ class ReusableForm(Form):
         blankData = MultiDict([ ('csrf', self.reset_csrf() ) ])
         self.process(blankData)
 
+@app.route("/")
+def render_index():
+    return render_template("index.html")
 
 @app.route("/upv")
 def render_upv():
@@ -51,7 +54,7 @@ def render_umd():
 def render_umd_sub(page_name):
     return render_template('umd/%s' % page_name)
     
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/flask", methods=['GET', 'POST'])
 def hello():
     form = ReusableForm(request.form)
  
@@ -79,4 +82,4 @@ def render_static(page_name):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0',port=80)
