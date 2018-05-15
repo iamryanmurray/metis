@@ -1,6 +1,6 @@
 code,href,label
 00,/index.html,About
-01,/flask.html,Flask App
+01,/flask,Flask App
 02,/upv.html,Upvoted
 03,/dnv.html,Downvoted
 04,/umd.html,Up Minus Down
