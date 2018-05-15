@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+    <head>
+        <title>Reddit Comment Tester</title>
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="medley.css">
+       <meta name="viewport" content = "width=device-width, initial-scale=1.0">
+ 
+    </head>
+    <body>
+              <nav id="nav" class="navbar navbar-default" role="navigation"></nav>
+
+ 
+ 
+<div class="container">
+ 
+ 
+  <h2>Test your comment submission to /r/Seattle</h2>
+  <form  action="" method="post" role="form">
+    {{ form.csrf }}
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="text" class="form-control" id="username" name="username" placeholder="What's your name?">
+      <br>
+      <label for="flair">Flair:</label>
+      <input type="text" class="form-control" id="flair" name="flair" placeholder="Flair is optional.">
+      <br>
+      <label for="comment">Comment Text:</label>
+      <textarea class="form-control" id="comment" name="comment" placeholder="Enter your comment here." style="height:200px"></textarea>
+ 
+ 
+    </div>
+    <button type="submit" class="btn btn-success">Test Comment</button>
+  </form>
+ 
+  <br>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+ 
+        {% for message in messages %}
+            {% if "Error" not in message[1]: %}
+                <div class="alert alert-info">
+                <strong>Result: </strong> {{ message[1] }}
+                </div>
+            {% endif %}
+ 
+            {% if "Error" in message[1]: %}
+                <div class="alert alert-warning">
+                {{ message[1] }}
+                </div>
+            {% endif %}
+        {% endfor %}
+            {% endif %}
+        {% endwith %}
+ 
+</div>
+<br>            
+</div>
+</div>        
+        <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+
+        <script type="text/javascript" src="/nav.js"></script>
+
+</body>
+</html>

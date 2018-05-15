@@ -1,5 +1,7 @@
 from flask import Flask, render_template, flash, request
 from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+import sys
+#sys.path.append('~/metis/McNulty/')
 
 from flask_fn import test_new_comment
  
