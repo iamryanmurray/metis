@@ -25,6 +25,10 @@ As the goal for this project was to build a recommendation engine, I opted to se
 
 ## Deployment
 
-I built a Flask app which allows a user to enter in their potential new comment and receive a recommendation as to whether the new comment will be upvoted or downvoted.  It is hosted on AWS and can be accessed [here](http://34.219.40.159/).  Also included are visualizations done in d3.js using Jason Davies' [word cloud generator](https://github.com/jasondavies/d3-cloud).
+I built a Flask app which allows a user to enter in their potential new comment and receive a recommendation as to whether the new comment will be upvoted or downvoted.  It is hosted on AWS and can be accessed [here](http://34.219.40.159/).  Also included are [word cloud visualizations](https://github.com/jasondavies/d3-cloud) of the most common words in upvoted and downvoted comments, as well as their [relative compliments](http://34.219.40.159/dmu.html).
+
+## Future Develoment
+
+I would like to employ more advanced Natural langugae processing techinques.  Supplementing the Bag of Words model could be tools like [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).  I also would like to look more into the context of a comment, for example the topic and popularity of the post that comment is made within, as well as the direct and indirect parent comments of individual posts.
 
 
