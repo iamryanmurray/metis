@@ -25,7 +25,7 @@ As the goal for this project was to build a recommendation engine, I opted to se
 
 ## Deployment
 
-I built a Flask app which allows a user to enter in their potential new comment and receive a recommendation as to whether the new comment will be upvoted or downvoted.  It is hosted on AWS and can be accessed [here](http://34.219.40.159/).  Also included are [word cloud visualizations](https://github.com/jasondavies/d3-cloud) of the most common words in upvoted and downvoted comments, as well as their [relative compliments](http://34.219.40.159/dmu.html).
+I built a Flask app which allows a user to enter in their potential new comment and receive a recommendation as to whether the new comment will be upvoted or downvoted.  It is hosted on AWS and can be accessed [here](http://murray.li).  Also included are [word cloud visualizations](https://github.com/jasondavies/d3-cloud) of the most common words in upvoted and downvoted comments, as well as their [relative compliments](http://murray.li/dmu.html).
 
 ## Future Develoment
 
