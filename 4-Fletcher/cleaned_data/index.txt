@@ -1,0 +1,10 @@
+ted_strings_1.pkl
+ted_strings_10.pkl
+ted_strings_2.pkl
+ted_strings_3.pkl
+ted_strings_4.pkl
+ted_strings_5.pkl
+ted_strings_6.pkl
+ted_strings_7.pkl
+ted_strings_8.pkl
+ted_strings_9.pkl
