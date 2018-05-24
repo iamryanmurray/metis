@@ -7,6 +7,13 @@ import os
 os.environ['KERAS_BACKEND'] = 'theano'
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
+
+os.environ['MKL_NUM_THREADS'] = '36'
+os.environ['GOTO_NUM_THREADS'] = '36'
+os.environ['OMP_NUM_THREADS'] = '36'
+os.eviron['openmp'] = 'True'
+
+
 import keras
 keras.__version__
 
@@ -354,8 +361,8 @@ r[0].shape, r[1].shape, len(r)
 for iteration in range(100):
     print ('Iteration', iteration)
     h = model.fit_generator(traingen, steps_per_epoch=nb_train_samples//batch_size,
-                        epochs=1, validation_data=valgen, validation_steps=nb_val_samples//batch_size,
-                            use_multiprocessing=True,workers=10
+                        epochs=1, validation_data=valgen, validation_steps=nb_val_samples//batch_size
+                        
                            )
     for k,v in h.history.iteritems():
         history[k] = history.get(k,[]) + v
