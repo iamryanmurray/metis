@@ -8,11 +8,6 @@ os.environ['KERAS_BACKEND'] = 'theano'
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
 
-os.environ['MKL_NUM_THREADS'] = '36'
-os.environ['GOTO_NUM_THREADS'] = '36'
-os.environ['OMP_NUM_THREADS'] = '36'
-os.eviron['openmp'] = 'True'
-
 
 import keras
 keras.__version__
