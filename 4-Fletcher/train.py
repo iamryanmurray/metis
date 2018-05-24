@@ -192,6 +192,29 @@ if FN1 and os.path.exists('data/%s.hdf5'%FN1):
     model.load_weights('data/%s.hdf5'%FN1)
 
 
+def vocab_fold(xs):
+    '''
+    Convert a list of word of indices that may contain words outside vocab size
+    to words inside.  If a word is outside, first try glove_idx2idx to find a similar word inside.
+    If none exist then replace all occurences of the same unknown word with <0>,<1>,etc.
+    '''
+    xs = [x if x < oov0 else glove_idx2idx.get(x,x) for x in xs]
+    #the most popular word is <0> and so on.
+    outside = sorted([x for x in xs if x >= oov0])
+    # if there are more than nb_unknown_words oov words then put them all in nb_unknown_words - 1
+    outside = dict((x,vocab_size-1-min(i, nb_unknown_words-1)) for i, x in enumerate(outside))    
+    xs = [outside.get(x,x) for x in xs]
+    return xs
+
+def vocab_unfold(desc,xs):
+    #assume desc is the unfolded version of the start of xs
+    unfold = {}
+    for i, unfold_idx in enumerate(desc):
+        fold_idx = xs[i]
+        if fold_idx >= oov0:
+            unfold[fold_idx] = unfold_idx
+    return [unfold.get(x,x) for x in xs]
+
 def lpadd(x,maxlend=maxlend,eos=eos):
     """left pad a description to maxlend and then add eos.
     The eos is the input to predicting the first word in the headline"""
@@ -339,6 +362,6 @@ for iteration in range(100):
     with open('data/%s.history.pkl'%FN,'wb') as fp:
         pickle.dump(history,fp,-1)
     model.save_weights('data/%s.hdf5'%FN, overwrite=True)
-    gensamples(batch_size=batch_size)
+    #gensamples(batch_size=batch_size)
 
 
