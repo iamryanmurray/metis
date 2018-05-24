@@ -39,11 +39,8 @@ with open('data/%s.pkl'%FN0, 'rb') as fp:
     embedding, idx2word, word2idx, glove_idx2idx = pickle.load(fp)
 vocab_size, embedding_size = embedding.shape
 
-import pickle
-
-with open('data/%s.pkl'%FN0, 'rb') as fp:
-    embedding, idx2word, word2idx, glove_idx2idx = pickle.load(fp)
-vocab_size, embedding_size = embedding.shape
+with open('data/%s.data.pkl'%FN0, 'rb') as fp:
+    X, Y = pickle.load(fp)
 
 nb_unknown_words = 30
 
@@ -217,11 +214,11 @@ data.shape,list(map(len,samples))
 probs = model.predict(data,verbose=1,batch_size=1)
 probs.shape
 
-def flip_headline(x, nflips=None, model=None, debug=False):
+def flip_headline(x, n_flips=None, model=None, debug=False):
     """given a vectorized input (after `pad_sequences`) flip some of the words in the second half (headline)
     with words predicted by the model
     """
-    if nflips is None or model is None or nflips <= 0:
+    if n_flips is None or model is None or n_flips <= 0:
         return x
     
     batch_size = len(x)
@@ -232,7 +229,7 @@ def flip_headline(x, nflips=None, model=None, debug=False):
         # pick locations we want to flip
         # 0...maxlend-1 are descriptions and should be fixed
         # maxlend is eos and should be fixed
-        flips = sorted(random.sample(range(maxlend+1,maxlen), nflips))
+        flips = sorted(random.sample(range(maxlend+1,maxlen), n_flips))
         if debug and b < debug:
             print (b,)
         for input_idx in flips:
@@ -254,13 +251,13 @@ def flip_headline(x, nflips=None, model=None, debug=False):
 
 
 
-def conv_seq_labels(xds, xhs, nflips=None, model=None, debug=False):
+def conv_seq_labels(xds, xhs, n_flips=None, model=None, debug=False):
     """description and hedlines are converted to padded input vectors. headlines are one-hot to label"""
     batch_size = len(xhs)
     assert len(xds) == batch_size
     x = [vocab_fold(lpadd(xd)+xh) for xd,xh in zip(xds,xhs)]  # the input does not have 2nd eos
     x = sequence.pad_sequences(x, maxlen=maxlen, value=empty, padding='post', truncating='post')
-    x = flip_headline(x, nflips=nflips, model=model, debug=debug)
+    x = flip_headline(x, n_flips=n_flips, model=model, debug=debug)
     
     y = np.zeros((batch_size, maxlenh, vocab_size))
     for i, xh in enumerate(xhs):
@@ -300,7 +297,7 @@ def gen(Xd, Xh, batch_size=batch_size, nb_batches=None, n_flips=None, model=None
         c+= 1
         random.seed(new_seed)
 
-        yield conv_seq_labels(xds, xhs, nflips=nflips, model=model, debug=debug)
+        yield conv_seq_labels(xds, xhs, n_flips=n_flips, model=model, debug=debug)
 
 
 r = next(gen(X_train, Y_train, batch_size=batch_size))
