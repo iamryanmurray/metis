@@ -355,7 +355,7 @@ for iteration in range(100):
     print ('Iteration', iteration)
     h = model.fit_generator(traingen, steps_per_epoch=nb_train_samples//batch_size,
                         epochs=1, validation_data=valgen, validation_steps=nb_val_samples//batch_size,
-                            use_multiprocessing=True
+                            use_multiprocessing=True,workers=10
                            )
     for k,v in h.history.iteritems():
         history[k] = history.get(k,[]) + v
