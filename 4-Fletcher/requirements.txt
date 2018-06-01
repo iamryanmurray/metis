@@ -1,0 +1,6 @@
+nltk
+gensim
+pyLDAvis
+sklearn
+pandas
+numpy
