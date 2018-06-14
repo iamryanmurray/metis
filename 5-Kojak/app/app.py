@@ -10,13 +10,16 @@ import keras.models
 import re
 import sys
 import os
+import pickle
 sys.path.append(os.path.abspath("./model"))
 
 from load import *
 
 app = Flask(__name__)
 
-global model,graph
+global model ,idx2class,graph
+
+model,idx2class,graph = init()
 
 photos = UploadSet('photos',IMAGES)
 
@@ -42,12 +45,18 @@ def upload():
 		img_data = image.img_to_array(img)
 		img_data = np.expand_dims(img_data,axis=0)
 		img_data = preprocess_input(img_data)
+		with graph.as_default():
 
-		pred_class = idx2class[model.predict_classes(img_data)[0]]
+			pred_class = idx2class[model.predict_classes(img_data)[0]]
 
-		return render_template("index2.html",cl = pred_class)
+			return render_template("index2.html",cl = pred_class)
 
-if __name == "__main__":
+
+@app.route("/<string:page_name>")
+def render_static(page_name):
+	return render_template('%s' % page_name)
+
+if __name__ == "__main__":
 	port = int(os.environ.get('PORT', 5000))
 
 	app.run(host='0.0.0.0',port = port)
