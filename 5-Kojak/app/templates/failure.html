@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>CarSpotter</title>
+	 	  <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+
+
+</head>
+
+
+<body>
+
+		<h1><span>What car was in your image?</span></h1>
+
+		<form action="/label" method="post">
+			<span style="color:black"><h3>Make:</h3></span>
+		
+			<input type="text" name="make" value ="enter the manufacturer">
+			<br>
+			<span style="color:black"><h3>Model: </h3></span>
+			<input type="text" name="model" value="enter the model">
+			<br>
+			<div id = s , style="margin-top:20px;">
+			<input type="submit" value="Submit">
+		</div>
+		</form>
+
+
+</body>
+</html>
